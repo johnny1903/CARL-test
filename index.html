@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Trắc nghiệm Đánh giá Tài năng - CARL</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .question-block { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    .answer-group { margin-top: 10px; }
+    .answer-option { margin-bottom: 5px; }
+    .submit-btn { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+    #result { margin-top: 30px; font-weight: bold; white-space: pre-line; }
+  </style>
+</head>
+<body>
+  <h1>Trắc nghiệm Đánh giá Tài năng - CARL</h1>
+  <p><em>Tự đánh giá và lựa chọn câu trả lời mà bạn nghĩ giống với bạn nhất trên thang điểm từ 1 đến 5, với 1 là "Khác bạn nhất" và 5 là "Giống bạn nhất". Kết quả chỉ mang tính chất tham khảo. Độ chính xác của kết quả phụ thuộc vào đáp án bạn lựa chọn.</em></p>
+  <form id="carlForm"></form>
+  <button class="submit-btn" onclick="calculateResult()">Hoàn tất và Xem kết quả</button>
+  <div id="result"></div>
+
+  <script>
+    const CARL_CATEGORIES = ['Capacity', 'Ambition', 'Relationship', 'Learning Agility'];
+
+    const QUESTIONS = {
+      'Capacity': [
+        'Tôi nhận ra xu hướng hoặc mô hình nhanh chóng ngay cả ngoài phạm vi công việc của mình.',
+        'Tôi có thể học tập, xử lý và hiểu dữ liệu phức tạp.',
+        'Tôi dễ dàng nắm vững kiến thức khi đối mặt với thông tin mới.',
+        'Tôi tự tin xử lý các tình huống không rõ ràng, phức tạp bằng kiến thức của mình.',
+        'Tôi thường giúp người khác hoặc có khả năng giúp người khác hiểu được các vấn đề phức tạp.'
+      ],
+      'Ambition': [
+        'Tôi thường xuyên đặt ra các mục tiêu đầy thách thức cho bản thân.',
+        'Tôi dành thời gian và năng lượng để cải thiện tổ chức, không chỉ công việc của mình.',
+        'Tôi cố gắng trở thành hình mẫu trong việc đạt kết quả.',
+        'Tôi hoàn toàn chịu trách nhiệm với công việc của mình.',
+        'Tôi thúc đẩy cả bản thân và người khác đạt kết quả cao.'
+      ],
+      'Relationship': [
+        'Tôi nhận thức được hành vi của mình ảnh hưởng đến người khác như thế nào.',
+        'Tôi thường xuyên tìm kiếm các phản hồi và hành động dựa trên phản hồi.',
+        'Tôi hợp tác tốt với đa số mọi người, kể cả những người có quan điểm khác biệt.',
+        'Tôi tập trung vào mục tiêu chung chứ không chỉ mục tiêu cá nhân.',
+        'Tôi truyền cảm hứng cho người khác thông qua giao tiếp và ảnh hưởng.'
+      ],
+      'Learning Agility': [
+        'Tôi tò mò và cởi mở với các kiến thức, cách làm việc mới.',
+        'Tôi học hỏi từ sai lầm và áp dụng bài học nhanh chóng.',
+        'Tôi thoải mái làm việc trong môi trường thay đổi và không chắc chắn.',
+        'Tôi khuyến khích người khác phát triển và học hỏi.',
+        'Tôi phát huy tốt nhất khi đối mặt với thử thách mới và phức tạp.'
+      ]
+    };
+
+    function createQuestions() {
+      const form = document.getElementById('carlForm');
+      let index = 0, questionNumber = 1;
+      CARL_CATEGORIES.forEach(category => {
+        QUESTIONS[category].forEach((q) => {
+          const qDiv = document.createElement('div');
+          qDiv.className = 'question-block';
+          qDiv.innerHTML = `<strong>Câu ${questionNumber}:</strong> ${q}`;
+
+          const answerGroup = document.createElement('div');
+          answerGroup.className = 'answer-group';
+
+          for (let score = 1; score <= 5; score++) {
+            answerGroup.innerHTML += `
+              <div class="answer-option">
+                <label><input type="radio" name="q${index}" value="${score}" required> ${score}</label>
+              </div>
+            `;
+          }
+
+          qDiv.appendChild(answerGroup);
+          form.appendChild(qDiv);
+          index++;
+          questionNumber++;
+        });
+      });
+    }
+
+    function calculateResult() {
+      const form = document.forms['carlForm'];
+      const results = { 'Capacity': 0, 'Ambition': 0, 'Relationship': 0, 'Learning Agility': 0 };
+      let index = 0;
+
+      CARL_CATEGORIES.forEach(category => {
+        QUESTIONS[category].forEach(() => {
+          const selected = parseInt(form[`q${index}`].value);
+          results[category] += selected;
+          index++;
+        });
+      });
+
+      const report = [];
+      for (const [cat, score] of Object.entries(results)) {
+        let rating = 'Concern';
+        if (score >= 21) rating = 'Leadership Potential';
+        else if (score >= 18) rating = 'Growth';
+        else if (score >= 15) rating = 'Expert';
+        else if (score >= 12) rating = 'Core';
+        report.push(`${cat}: ${rating}`);
+      }
+
+      document.getElementById('result').innerText = 'Your Talent Classification:\n' + report.join('\n');
+    }
+
+    createQuestions();
+  </script>
+</body>
+</html>
