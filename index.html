@@ -6,17 +6,26 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .question-block { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    .answer-group { margin-top: 10px; }
-    .answer-option { margin-bottom: 5px; }
+    .answer-group { margin-top: 10px; display: flex; gap: 15px; }
+    .answer-option { display: flex; align-items: center; }
+    .answer-option input[type="radio"] {
+      width: 24px;
+      height: 24px;
+      margin-right: 5px;
+      accent-color: #007BFF;
+    }
     .submit-btn { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
     #result { margin-top: 30px; font-weight: bold; white-space: pre-line; }
+    .rating { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>Trắc nghiệm Đánh giá Tài năng - CARL</h1>
   <p><em>Tự đánh giá và lựa chọn câu trả lời mà bạn nghĩ giống với bạn nhất trên thang điểm từ 1 đến 5, với 1 là "Khác bạn nhất" và 5 là "Giống bạn nhất". Kết quả chỉ mang tính chất tham khảo. Độ chính xác của kết quả phụ thuộc vào đáp án bạn lựa chọn.</em></p>
   <form id="carlForm"></form>
-  <button class="submit-btn" onclick="calculateResult()">Hoàn tất và Xem kết quả</button>
+  <button type="button" class="submit-btn" onclick="calculateResult()">Hoàn tất và Xem kết quả</button>
+  <div id="error-message" style="color:red; font-weight:bold; margin-top:10px;"></div>
+  <div id="scroll-message" style="color:red; font-weight:bold; margin-top:10px;"></div>
   <div id="result"></div>
 
   <script>
@@ -25,7 +34,7 @@
     const QUESTIONS = {
       'Capacity': [
         'Tôi nhận ra xu hướng hoặc mô hình nhanh chóng ngay cả ngoài phạm vi công việc của mình.',
-        'Tôi có thể học tập, xử lý và hiểu dữ liệu phức tạp.',
+        'Tôi có thể học tập và xử lý và hiểu dữ liệu phức tạp.',
         'Tôi dễ dàng nắm vững kiến thức khi đối mặt với thông tin mới.',
         'Tôi tự tin xử lý các tình huống không rõ ràng, phức tạp bằng kiến thức của mình.',
         'Tôi thường giúp người khác hoặc có khả năng giúp người khác hiểu được các vấn đề phức tạp.'
@@ -68,7 +77,7 @@
           for (let score = 1; score <= 5; score++) {
             answerGroup.innerHTML += `
               <div class="answer-option">
-                <label><input type="radio" name="q${index}" value="${score}" required> ${score}</label>
+                <label><input type="radio" name="q${index}" value="${score}"> ${score}</label>
               </div>
             `;
           }
@@ -82,9 +91,36 @@
     }
 
     function calculateResult() {
+      document.getElementById('error-message').innerHTML = '';
       const form = document.forms['carlForm'];
       const results = { 'Capacity': 0, 'Ambition': 0, 'Relationship': 0, 'Learning Agility': 0 };
       let index = 0;
+
+      // Kiểm tra xem tất cả các câu hỏi đã được trả lời chưa
+      for (let i = 0; i < 20; i++) {
+        const selected = form[`q${i}`];
+        if (!selected || !selected.value) {
+          document.getElementById('error-message').innerText = 'Chưa hoàn thành lựa chọn tất cả các câu hỏi.';
+          document.getElementById('result').innerHTML = '';
+          return;
+        }
+      }
+
+      for (let i = 0; i < 20; i++) {
+        const radios = form[`q${i}`];
+        if (!radios) continue;
+        let selected = false;
+        for (const radio of radios) {
+          if (radio.checked) {
+            selected = true;
+            break;
+          }
+        }
+        if (!selected) {
+          alert('Chưa hoàn thành lựa chọn tất cả các câu hỏi.');
+          return;
+        }
+      }
 
       CARL_CATEGORIES.forEach(category => {
         QUESTIONS[category].forEach(() => {
@@ -96,15 +132,17 @@
 
       const report = [];
       for (const [cat, score] of Object.entries(results)) {
-        let rating = 'Concern';
-        if (score >= 21) rating = 'Leadership Potential';
-        else if (score >= 18) rating = 'Growth';
-        else if (score >= 15) rating = 'Expert';
-        else if (score >= 12) rating = 'Core';
+        let rating = '<span class="rating">Concern</span>';
+        if (score >= 21) rating = '<span class="rating">Leadership Potential</span>';
+        else if (score >= 18) rating = '<span class="rating">Growth</span>';
+        else if (score >= 15) rating = '<span class="rating">Expert</span>';
+        else if (score >= 12) rating = '<span class="rating">Core</span>';
         report.push(`${cat}: ${rating}`);
       }
 
-      document.getElementById('result').innerText = 'Your Talent Classification:\n' + report.join('\n');
+      document.getElementById('result').innerHTML = 'Your Talent Classification:
+' + report.join('<br>');
+      document.getElementById('scroll-message').innerText = 'Hãy kéo xuống để xem kết quả';
     }
 
     createQuestions();
