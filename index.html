@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Bộ công cụ đánh giá tài năng theo CARL</title>
+  <title>Trắc nghiệm Đánh giá Tài năng - CARL</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .question-block { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
@@ -20,8 +20,14 @@
   </style>
 </head>
 <body>
-  <h1>Bộ công cụ đánh giá Tài năng theo CARL</h1>
+  <h1>Trắc nghiệm Đánh giá Tài năng - CARL</h1>
   <p><em>Tự đánh giá và lựa chọn câu trả lời mà bạn nghĩ giống với bạn nhất trên thang điểm từ 1 đến 5, với 1 là "Khác bạn nhất" và 5 là "Giống bạn nhất". Kết quả chỉ mang tính chất tham khảo. Độ chính xác của kết quả phụ thuộc vào đáp án bạn lựa chọn.</em></p>
+  <div style="margin-bottom: 20px;">
+    <label><strong>Vị trí hiện tại của bạn:</strong></label><br>
+    <input type="text" id="currentPosition" style="width: 100%; padding: 8px; margin-bottom: 10px;"><br>
+    <label><strong>Vị trí kế tiếp bạn mong muốn:</strong></label><br>
+    <input type="text" id="nextPosition" style="width: 100%; padding: 8px;">
+  </div>
   <form id="carlForm"></form>
   <button type="button" class="submit-btn" onclick="calculateResult()">Hoàn tất và Xem kết quả</button>
   <div id="error-message" style="color:red; font-weight:bold; margin-top:10px;"></div>
@@ -41,7 +47,7 @@
         'Tôi nhận ra xu hướng hoặc mô hình nhanh chóng ngay cả ngoài phạm vi công việc của mình.',
         'Tôi có thể học tập và xử lý và hiểu dữ liệu phức tạp.',
         'Tôi dễ dàng nắm vững kiến thức khi đối mặt với thông tin mới.',
-        'Tôi tự tin xử lý các tình huống không rõ ràng, phức tạp bằng kiến thức của mình.',
+        'Tôi tự tin xử lý các tình huống không rõ ràng, phức tạp.',
         'Tôi thường giúp người khác hoặc có khả năng giúp người khác hiểu được các vấn đề phức tạp.'
       ],
       'Ambition': [
@@ -134,18 +140,26 @@
       document.getElementById('scroll-message').innerText = 'Hãy kéo xuống để xem kết quả';
 
       const summaryText = report.map(r => r.replace(/<[^>]+>/g, ''));
-      const prompt = `Tôi vừa hoàn thành một bài trắc nghiệm tự đánh giá theo mô hình CARL gồm 4 nhóm năng lực: Capacity, Ambition, Relationship và Learning Agility và 5 xếp loại theo thứ tự tăng dần là Concern, Core, Expert, Growth, Leadership potential. Dưới đây là kết quả phân loại của tôi:\n` + summaryText.join('\n') + `\n\nHãy viết một đoạn nhận xét chuyên sâu (khoảng 200-300 chữ) về kết quả đánh giá, điểm mạnh, điểm cần cải thiện và định hướng phát triển phù hợp dựa trên kết quả này.`;
+      const current = document.getElementById('currentPosition').value.trim();
+      const next = document.getElementById('nextPosition').value.trim();
+      let prompt = '';
+      const hasPositions = current && next;
+      if (hasPositions) {
+        prompt += `Tôi đang giữ vị trí là ${current}, tôi mong muốn được thăng tiến đến vị trí ${next}. `;
+      }
+      prompt += `Tôi vừa hoàn thành một bài trắc nghiệm tự đánh giá nawg lực theo mô hình CARL gồm 4 nhóm năng lực: Capacity, Ambition, Relationship và Learning Agility và 5 xếp loại theo thứ tự tăng dần là Concern, Core, Expert, Growth, Leadership potential. Dưới đây là kết quả phân loại của tôi:\n` + summaryText.join('\n') + `\n\nHãy viết một đoạn nhận xét chuyên sâu (khoảng 200-300 chữ) về kết quả đánh giá, điểm mạnh, điểm cần cải thiện và định hướng phát triển phù hợp dựa trên kết quả này` + (hasPositions ? ' và vị trí tôi mong muốn.' : '.');
 
       document.getElementById('aiPrompt').value = prompt;
       document.getElementById('prompt-container').style.display = 'block';
     }
 
     function copyPrompt() {
-      const promptText = document.getElementById('aiPrompt');
-      promptText.select();
-      promptText.setSelectionRange(0, 99999);
-      document.execCommand('copy');
-      alert('Đã sao chép Prompt vào clipboard!');
+      const promptText = document.getElementById('aiPrompt').value;
+      navigator.clipboard.writeText(promptText).then(() => {
+        alert('Đã sao chép Prompt vào clipboard!');
+      }).catch(err => {
+        alert('Không thể sao chép vào clipboard');
+      });
     }
 
     createQuestions();
