@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Bộ công cụ tự đánh giá Tài năng theo CARL</title>
+  <title>Bộ công cụ đánh giá tài năng theo CARL</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .question-block { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
@@ -20,13 +20,18 @@
   </style>
 </head>
 <body>
-  <h1>Bộ công cụ tự đánh giá Tài năng theo CARL</h1>
+  <h1>Bộ công cụ đánh giá Tài năng theo CARL</h1>
   <p><em>Tự đánh giá và lựa chọn câu trả lời mà bạn nghĩ giống với bạn nhất trên thang điểm từ 1 đến 5, với 1 là "Khác bạn nhất" và 5 là "Giống bạn nhất". Kết quả chỉ mang tính chất tham khảo. Độ chính xác của kết quả phụ thuộc vào đáp án bạn lựa chọn.</em></p>
   <form id="carlForm"></form>
   <button type="button" class="submit-btn" onclick="calculateResult()">Hoàn tất và Xem kết quả</button>
   <div id="error-message" style="color:red; font-weight:bold; margin-top:10px;"></div>
   <div id="scroll-message" style="color:red; font-weight:bold; margin-top:10px;"></div>
   <div id="result"></div>
+  <div id="prompt-container" style="margin-top:20px; display:none;">
+    <h3>Prompt AI (dùng để copy và dán vào AI chat xem nhận xét):</h3>
+    <textarea id="aiPrompt" rows="6" style="width:100%; font-size:14px;"></textarea>
+    <button onclick="copyPrompt()" style="margin-top:10px; padding:5px 10px; font-size:14px;">Sao chép Prompt</button>
+  </div>
 
   <script>
     const CARL_CATEGORIES = ['Capacity', 'Ambition', 'Relationship', 'Learning Agility'];
@@ -102,22 +107,7 @@
         if (!selected || !selected.value) {
           document.getElementById('error-message').innerText = 'Chưa hoàn thành lựa chọn tất cả các câu hỏi.';
           document.getElementById('result').innerHTML = '';
-          return;
-        }
-      }
-
-      for (let i = 0; i < 20; i++) {
-        const radios = form[`q${i}`];
-        if (!radios) continue;
-        let selected = false;
-        for (const radio of radios) {
-          if (radio.checked) {
-            selected = true;
-            break;
-          }
-        }
-        if (!selected) {
-          document.getElementById('error-message').innerText = 'Chưa hoàn thành lựa chọn tất cả các câu hỏi.';
+          document.getElementById('prompt-container').style.display = 'none';
           return;
         }
       }
@@ -142,6 +132,20 @@
 
       document.getElementById('result').innerHTML = 'Your Talent Classification:<br>' + report.join('<br>');
       document.getElementById('scroll-message').innerText = 'Hãy kéo xuống để xem kết quả';
+
+      const summaryText = report.map(r => r.replace(/<[^>]+>/g, ''));
+      const prompt = `Tôi vừa hoàn thành một bài trắc nghiệm tự đánh giá theo mô hình CARL gồm 4 nhóm năng lực: Capacity, Ambition, Relationship và Learning Agility và 5 xếp loại theo thứ tự tăng dần là Concern, Core, Expert, Growth, Leadership potential. Dưới đây là kết quả phân loại của tôi:\n` + summaryText.join('\n') + `\n\nHãy viết một đoạn nhận xét chuyên sâu (khoảng 200-300 chữ) về kết quả đánh giá, điểm mạnh, điểm cần cải thiện và định hướng phát triển phù hợp dựa trên kết quả này.`;
+
+      document.getElementById('aiPrompt').value = prompt;
+      document.getElementById('prompt-container').style.display = 'block';
+    }
+
+    function copyPrompt() {
+      const promptText = document.getElementById('aiPrompt');
+      promptText.select();
+      promptText.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      alert('Đã sao chép Prompt vào clipboard!');
     }
 
     createQuestions();
